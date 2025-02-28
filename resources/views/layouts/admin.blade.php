@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>Admin - {{ config('app.name', 'Laravel') }} - @yield('title', 'Dashboard')</title>
+    <title>@yield('title', 'Admin Dashboard') - {{ config('app.name', 'Laravel') }}</title>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
@@ -16,12 +16,10 @@
 </head>
 <body class="font-sans antialiased">
     <div class="min-h-screen bg-gray-100">
-        <!-- Sidebar -->
         <div class="flex">
-            <div class="fixed inset-y-0 left-0 w-64 bg-gray-800 text-white">
-                <div class="p-6">
-                    <a href="{{ route('admin.dashboard') }}" class="text-xl font-bold">Admin Panel</a>
-                </div>
+            <!-- Sidebar -->
+            <div class="w-64 bg-gray-800 text-white min-h-screen p-4">
+                <div class="text-xl font-bold mb-8">Admin Panel</div>
                 <nav class="mt-6">
                     <div class="px-4 py-2 text-xs text-gray-400 uppercase">
                         Navigation
@@ -38,6 +36,9 @@
                     <a href="{{ route('admin.orders.index') }}" class="block px-4 py-2 text-sm hover:bg-gray-700 {{ request()->routeIs('admin.orders.*') ? 'bg-gray-700' : '' }}">
                         Orders
                     </a>
+                    <a href="{{ route('admin.users.index') }}" class="block px-4 py-2 text-sm hover:bg-gray-700 {{ request()->routeIs('admin.users.*') ? 'bg-gray-700' : '' }}">
+                        Users
+                    </a>
                     <div class="px-4 py-2 mt-4 text-xs text-gray-400 uppercase">
                         Account
                     </div>
@@ -52,31 +53,39 @@
             </div>
 
             <!-- Main Content -->
-            <div class="ml-64 flex-1">
+            <div class="flex-1">
                 <!-- Top Navigation -->
-                <div class="bg-white shadow">
-                    <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
-                        <div class="flex justify-between">
-                            <h1 class="text-xl font-semibold">@yield('header', 'Dashboard')</h1>
-                            <div>
-                                <span class="text-gray-600">{{ Auth::user()->name }}</span>
+                <nav class="bg-white shadow-sm">
+                    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div class="flex justify-between h-16">
+                            <div class="flex">
+                                <div class="flex-shrink-0 flex items-center">
+                                    <span class="text-lg font-semibold">{{ config('app.name', 'Laravel') }} Admin</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="ml-3 relative">
+                                    <div class="text-sm text-gray-500">
+                                        Welcome, {{ Auth::user()->name }}
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
+                </nav>
 
                 <!-- Page Content -->
-                <main class="py-6">
-                    @if(session('success'))
-                        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6">
+                <main class="py-4">
+                    @if (session('success'))
+                        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 mb-4">
                             <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
                                 <span class="block sm:inline">{{ session('success') }}</span>
                             </div>
                         </div>
                     @endif
 
-                    @if(session('error'))
-                        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6">
+                    @if (session('error'))
+                        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 mb-4">
                             <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
                                 <span class="block sm:inline">{{ session('error') }}</span>
                             </div>

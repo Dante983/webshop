@@ -55,7 +55,7 @@
                         <label for="image" class="block text-sm font-medium text-gray-700 mb-1">Product Image</label>
                         @if($product->image)
                             <div class="mb-2">
-                                <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" class="h-32 w-auto object-cover rounded">
+                                <img src="{{ asset($product->image) }}" alt="{{ $product->name }}" class="h-32 w-auto object-cover rounded">
                                 <p class="text-xs text-gray-500 mt-1">Current image</p>
                             </div>
                         @endif

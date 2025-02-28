@@ -41,7 +41,7 @@ Route::post('/checkout/paypal/create-order', [CheckoutController::class, 'create
 Route::get('/checkout/paypal/capture-order', [CheckoutController::class, 'capturePayPalOrder'])->name('checkout.paypal.capture');
 
 // Admin routes
-Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(function () {
+Route::middleware(['auth', \App\Http\Middleware\AdminMiddleware::class])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
     
     // Products
@@ -51,23 +51,23 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::resource('categories', CategoryController::class);
     
     // Orders
-    Route::resource('orders', OrderController::class)->except(['create', 'store', 'edit', 'update', 'destroy']);
-    Route::patch('orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.update-status');
+    Route::resource('orders', OrderController::class);
     
     // Users
     Route::resource('users', UserController::class);
+});
+
+// User profile routes
+Route::middleware('auth')->group(function () {
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
 // Breeze authentication routes
 Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
-
-Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-});
 
 // Include Laravel's auth routes
 require __DIR__.'/auth.php';

@@ -28,7 +28,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
                     @if($product->image)
-                        <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" class="w-full h-auto rounded-lg">
+                        <img src="{{ asset($product->image) }}" alt="{{ $product->name }}" class="w-full h-auto rounded-lg">
                     @else
                         <div class="w-full h-64 bg-gray-200 flex items-center justify-center rounded-lg">
                             <span class="text-gray-500">No image</span>

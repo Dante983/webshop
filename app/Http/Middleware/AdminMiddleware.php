@@ -14,10 +14,10 @@ class AdminMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (!Auth::check() || !Auth::user()->isAdmin()) {
-            abort(403, 'Unauthorized action.');
+        if (Auth::check() && Auth::user()->is_admin) {
+            return $next($request);
         }
-
-        return $next($request);
+        
+        return redirect()->route('home')->with('error', 'You do not have permission to access this area.');
     }
 }
