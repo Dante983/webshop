@@ -29,6 +29,10 @@ class CartController extends Controller
 
         $cart = session()->get('cart', []);
 
+        // Get the primary image or the first image
+        $primaryImage = $product->images()->where('is_primary', true)->first();
+        $imagePath = $primaryImage ? $primaryImage->image_path : ($product->images->first() ? $product->images->first()->image_path : null);
+
         if (isset($cart[$product->id])) {
             $cart[$product->id]['quantity'] += $request->quantity;
         } else {
@@ -37,7 +41,7 @@ class CartController extends Controller
                 'name' => $product->name,
                 'price' => $product->price,
                 'quantity' => $request->quantity,
-                'image' => $product->image
+                'image' => $imagePath
             ];
         }
 

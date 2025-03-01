@@ -25,9 +25,22 @@
                 @foreach($featuredProducts as $product)
                     <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                         <div class="p-6 bg-white border-b border-gray-200">
-                            @if($product->image)
-                                <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" class="w-full h-48 object-cover mb-4">
-                            @endif
+                            <!-- Featured product image -->
+                            <div class="aspect-w-1 aspect-h-1 w-full overflow-hidden rounded-md bg-gray-200 group-hover:opacity-75">
+                                @if($product->images->count() > 0)
+                                    @php
+                                        $primaryImage = $product->images->where('is_primary', true)->first();
+                                        $displayImage = $primaryImage ? $primaryImage : $product->images->first();
+                                    @endphp
+                                    <img src="{{ asset('storage/' . $displayImage->image_path) }}" 
+                                         alt="{{ $product->name }}" 
+                                         class="h-48 w-full object-cover object-center">
+                                @else
+                                    <img src="{{ asset('images/no-image.jpg') }}" 
+                                         alt="No image available" 
+                                         class="h-48 w-full object-cover object-center">
+                                @endif
+                            </div>
                             <h3 class="text-xl font-bold mb-2">{{ $product->name }}</h3>
                             <p class="text-gray-600 mb-4">{{ Str::limit($product->description, 100) }}</p>
                             <div class="flex justify-between items-center">

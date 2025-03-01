@@ -38,12 +38,16 @@
                                 <div class="text-sm text-gray-900">{{ $product->id }}</div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                @if($product->image)
-                                    <img src="{{ asset($product->image) }}" alt="{{ $product->name }}" class="h-10 w-10 object-cover rounded">
+                                @if($product->images->count() > 0)
+                                    @php
+                                        $primaryImage = $product->images->where('is_primary', true)->first();
+                                        $displayImage = $primaryImage ? $primaryImage : $product->images->first();
+                                    @endphp
+                                    <img src="{{ asset('storage/' . $displayImage->image_path) }}" 
+                                         alt="{{ $product->name }}" 
+                                         class="h-16 w-16 object-cover rounded">
                                 @else
-                                    <div class="h-10 w-10 bg-gray-200 rounded flex items-center justify-center">
-                                        <span class="text-xs text-gray-500">No image</span>
-                                    </div>
+                                    <span class="text-gray-400">No image</span>
                                 @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">

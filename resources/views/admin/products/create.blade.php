@@ -6,7 +6,7 @@
 @section('content')
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="bg-white rounded-lg shadow overflow-hidden">
-        <form action="{{ route('admin.products.store') }}" method="POST" enctype="multipart/form-data" class="p-6">
+        <form method="POST" action="{{ route('admin.products.store') }}" enctype="multipart/form-data" class="p-6">
             @csrf
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -51,11 +51,9 @@
                     </div>
 
                     <div class="mb-4">
-                        <label for="image" class="block text-sm font-medium text-gray-700 mb-1">Product Image</label>
-                        <input type="file" name="image" id="image" class="w-full">
-                        @error('image')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
+                        <label for="images" class="block text-sm font-medium text-gray-700">Product Images</label>
+                        <input type="file" name="images[]" id="images" multiple class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                        <p class="mt-1 text-sm text-gray-500">You can select multiple images. The first image will be set as the primary image.</p>
                     </div>
                 </div>
 

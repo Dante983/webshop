@@ -105,6 +105,25 @@
                     <p>{{ $product->description }}</p>
                 </div>
             </div>
+
+            <!-- Product images section -->
+            <div class="mb-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-2">Product Images</h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    @forelse($product->images as $image)
+                        <div class="relative border rounded p-2">
+                            <img src="{{ asset('storage/' . $image->image_path) }}" 
+                                 alt="{{ $product->name }}" 
+                                 class="h-32 w-full object-cover rounded">
+                            @if($image->is_primary)
+                                <div class="absolute top-0 right-0 bg-green-500 text-white text-xs px-2 py-1 rounded-bl">Primary</div>
+                            @endif
+                        </div>
+                    @empty
+                        <p class="text-sm text-gray-500 col-span-4">No images uploaded yet.</p>
+                    @endforelse
+                </div>
+            </div>
         </div>
     </div>
 </div>

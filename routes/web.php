@@ -52,6 +52,7 @@ Route::middleware(['auth', \App\Http\Middleware\AdminMiddleware::class])->prefix
     
     // Orders
     Route::resource('orders', OrderController::class);
+    Route::patch('orders/{order}/update-status', [OrderController::class, 'updateStatus'])->name('orders.update-status');
     
     // Users
     Route::resource('users', UserController::class);

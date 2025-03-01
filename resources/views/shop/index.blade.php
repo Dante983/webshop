@@ -43,13 +43,22 @@
                             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                                 @foreach($products as $product)
                                     <div class="bg-white rounded-lg shadow overflow-hidden border">
-                                        @if($product->image)
-                                            <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" class="w-full h-48 object-cover">
-                                        @else
-                                            <div class="w-full h-48 bg-gray-200 flex items-center justify-center">
-                                                <span class="text-gray-500">No image</span>
-                                            </div>
-                                        @endif
+                                        <!-- Product image display -->
+                                        <div class="aspect-w-1 aspect-h-1 w-full overflow-hidden rounded-md bg-gray-200 group-hover:opacity-75">
+                                            @if($product->images->count() > 0)
+                                                @php
+                                                    $primaryImage = $product->images->where('is_primary', true)->first();
+                                                    $displayImage = $primaryImage ? $primaryImage : $product->images->first();
+                                                @endphp
+                                                <img src="{{ asset('storage/' . $displayImage->image_path) }}" 
+                                                     alt="{{ $product->name }}" 
+                                                     class="h-48 w-full object-cover object-center">
+                                            @else
+                                                <img src="{{ asset('images/no-image.jpg') }}" 
+                                                     alt="No image available" 
+                                                     class="h-48 w-full object-cover object-center">
+                                            @endif
+                                        </div>
                                         <div class="p-4">
                                             <h3 class="text-lg font-semibold mb-2">{{ $product->name }}</h3>
                                             <p class="text-gray-600 mb-2 line-clamp-2">{{ $product->description }}</p>
@@ -72,4 +81,4 @@
         </div>
     </div>
 </div>
-@endsection 
+@endsection

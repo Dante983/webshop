@@ -16,7 +16,20 @@
                         <div class="border rounded-lg p-4 mb-4">
                             @foreach($cartItems as $item)
                                 <div class="flex justify-between mb-2">
-                                    <span>{{ $item['name'] }} x {{ $item['quantity'] }}</span>
+                                    <div class="flex items-center">
+                                        <div class="flex-shrink-0 w-16 h-16 border border-gray-200 rounded-md overflow-hidden">
+                                            @if($item['image'])
+                                                <img src="{{ asset('storage/' . $item['image']) }}" 
+                                                     alt="{{ $item['name'] }}" 
+                                                     class="w-full h-full object-cover">
+                                            @else
+                                                <img src="{{ asset('images/no-image.jpg') }}" 
+                                                     alt="No image available" 
+                                                     class="w-full h-full object-cover">
+                                            @endif
+                                        </div>
+                                        <span class="ml-4">{{ $item['name'] }} x {{ $item['quantity'] }}</span>
+                                    </div>
                                     <span>${{ number_format($item['price'] * $item['quantity'], 2) }}</span>
                                 </div>
                             @endforeach

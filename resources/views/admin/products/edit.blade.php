@@ -6,7 +6,7 @@
 @section('content')
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="bg-white rounded-lg shadow overflow-hidden">
-        <form action="{{ route('admin.products.update', $product) }}" method="POST" enctype="multipart/form-data" class="p-6">
+        <form method="POST" action="{{ route('admin.products.update', $product) }}" enctype="multipart/form-data" class="p-6">
             @csrf
             @method('PUT')
             
@@ -52,18 +52,34 @@
                     </div>
 
                     <div class="mb-4">
-                        <label for="image" class="block text-sm font-medium text-gray-700 mb-1">Product Image</label>
-                        @if($product->image)
-                            <div class="mb-2">
-                                <img src="{{ asset($product->image) }}" alt="{{ $product->name }}" class="h-32 w-auto object-cover rounded">
-                                <p class="text-xs text-gray-500 mt-1">Current image</p>
-                            </div>
-                        @endif
-                        <input type="file" name="image" id="image" class="w-full">
-                        <p class="text-xs text-gray-500 mt-1">Leave empty to keep the current image</p>
-                        @error('image')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
+                        <label class="block text-sm font-medium text-gray-700">Current Images</label>
+                        <div class="grid grid-cols-4 gap-4 mt-2">
+                            @forelse($product->images as $image)
+                                <div class="relative border rounded p-2">
+                                    <img src="{{ asset('storage/' . $image->image_path) }}" alt="{{ $product->name }}" class="h-32 w-full object-cover rounded">
+                                    <div class="mt-2 flex items-center justify-between">
+                                        <div>
+                                            <input type="checkbox" name="delete_images[]" id="delete_image_{{ $image->id }}" value="{{ $image->id }}" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                            <label for="delete_image_{{ $image->id }}" class="ml-1 text-xs text-gray-700">Delete</label>
+                                        </div>
+                                        <div>
+                                            <input type="radio" name="primary_image" id="primary_image_{{ $image->id }}" value="{{ $image->id }}" {{ $image->is_primary ? 'checked' : '' }} class="rounded-full border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                            <label for="primary_image_{{ $image->id }}" class="ml-1 text-xs text-gray-700">Primary</label>
+                                        </div>
+                                    </div>
+                                    @if($image->is_primary)
+                                        <div class="absolute top-0 right-0 bg-green-500 text-white text-xs px-2 py-1 rounded-bl">Primary</div>
+                                    @endif
+                                </div>
+                            @empty
+                                <p class="text-sm text-gray-500 col-span-4">No images uploaded yet.</p>
+                            @endforelse
+                        </div>
+                        
+                        <div class="mt-4">
+                            <label for="images" class="block text-sm font-medium text-gray-700">Add New Images</label>
+                            <input type="file" name="images[]" id="images" multiple class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                        </div>
                     </div>
                 </div>
 

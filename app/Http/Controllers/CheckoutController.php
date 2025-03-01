@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\Product;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -11,6 +12,7 @@ use Illuminate\View\View;
 use Omnipay\Omnipay;
 use PayPalCheckoutSdk\Orders\OrdersCreateRequest;
 use PayPalCheckoutSdk\Orders\OrdersCaptureRequest;
+use Illuminate\Support\Facades\DB;
 
 class CheckoutController extends Controller
 {
@@ -104,35 +106,66 @@ class CheckoutController extends Controller
             return redirect()->route('home')->with('error', 'No pending order found');
         }
 
-        // Create order
-        $order = Order::create([
-            'user_id' => $orderData['user_id'],
-            'transaction_id' => $request->paymentId ?? null,
-            'payment_method' => $orderData['payment_method'],
-            'total_amount' => $orderData['total_amount'],
-            'status' => 'paid',
-            'customer_name' => $orderData['customer_name'],
-            'customer_email' => $orderData['customer_email'],
-            'customer_phone' => $orderData['customer_phone'],
-            'shipping_address' => $orderData['shipping_address'],
-            'notes' => $orderData['notes'] ?? null,
-        ]);
-
-        // Create order items
+        // Verify stock availability before processing
+        $insufficientStock = false;
+        $outOfStockItems = [];
+        
         foreach ($orderData['items'] as $item) {
-            OrderItem::create([
-                'order_id' => $order->id,
-                'product_id' => $item['id'],
-                'product_name' => $item['name'],
-                'quantity' => $item['quantity'],
-                'price' => $item['price']
-            ]);
+            $product = Product::find($item['id']);
+            if (!$product || $product->stock < $item['quantity']) {
+                $insufficientStock = true;
+                $outOfStockItems[] = $item['name'];
+            }
+        }
+        
+        if ($insufficientStock) {
+            return redirect()->route('cart.index')->with('error', 'Some items in your cart are no longer available in the requested quantity: ' . implode(', ', $outOfStockItems));
         }
 
-        // Clear cart and pending order
-        session()->forget(['cart', 'pending_order']);
+        // Use a transaction for data integrity
+        DB::beginTransaction();
+        
+        try {
+            // Create order
+            $order = Order::create([
+                'user_id' => $orderData['user_id'],
+                'transaction_id' => $request->paymentId ?? null,
+                'payment_method' => $orderData['payment_method'],
+                'total_amount' => $orderData['total_amount'],
+                'status' => 'paid',
+                'customer_name' => $orderData['customer_name'],
+                'customer_email' => $orderData['customer_email'],
+                'customer_phone' => $orderData['customer_phone'],
+                'shipping_address' => $orderData['shipping_address'],
+                'notes' => $orderData['notes'] ?? null,
+            ]);
 
-        return redirect()->route('checkout.complete', $order)->with('success', 'Your order has been placed successfully!');
+            // Create order items and update product stock
+            foreach ($orderData['items'] as $item) {
+                OrderItem::create([
+                    'order_id' => $order->id,
+                    'product_id' => $item['id'],
+                    'product_name' => $item['name'],
+                    'quantity' => $item['quantity'],
+                    'price' => $item['price']
+                ]);
+                
+                // Update product stock
+                $product = Product::find($item['id']);
+                $product->stock -= $item['quantity'];
+                $product->save();
+            }
+            
+            DB::commit();
+            
+            // Clear cart and pending order
+            session()->forget(['cart', 'pending_order']);
+
+            return redirect()->route('checkout.complete', $order)->with('success', 'Your order has been placed successfully!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->route('checkout.index')->with('error', 'An error occurred while processing your order. Please try again.');
+        }
     }
 
     public function cancel(): RedirectResponse
@@ -189,19 +222,72 @@ class CheckoutController extends Controller
 
     public function capturePayPalOrder(Request $request)
     {
-        $orderId = $request->input('order_id');
-        $request = new OrdersCaptureRequest($orderId);
+        // Get the pending order data
+        $orderData = session()->get('pending_order');
+
+        if (!$orderData) {
+            return redirect()->route('home')->with('error', 'No pending order found');
+        }
+
+        // Verify stock availability before processing
+        $insufficientStock = false;
+        $outOfStockItems = [];
+        
+        foreach ($orderData['items'] as $item) {
+            $product = Product::find($item['id']);
+            if (!$product || $product->stock < $item['quantity']) {
+                $insufficientStock = true;
+                $outOfStockItems[] = $item['name'];
+            }
+        }
+        
+        if ($insufficientStock) {
+            return redirect()->route('cart.index')->with('error', 'Some items in your cart are no longer available in the requested quantity: ' . implode(', ', $outOfStockItems));
+        }
+
+        // Use a transaction for data integrity
+        DB::beginTransaction();
         
         try {
-            $client = app('paypal.client');
-            $response = $client->execute($request);
+            // Create order
+            $order = Order::create([
+                'user_id' => $orderData['user_id'],
+                'transaction_id' => $request->paymentId ?? null,
+                'payment_method' => $orderData['payment_method'],
+                'total_amount' => $orderData['total_amount'],
+                'status' => 'paid',
+                'customer_name' => $orderData['customer_name'],
+                'customer_email' => $orderData['customer_email'],
+                'customer_phone' => $orderData['customer_phone'],
+                'shipping_address' => $orderData['shipping_address'],
+                'notes' => $orderData['notes'] ?? null,
+            ]);
+
+            // Create order items and update product stock
+            foreach ($orderData['items'] as $item) {
+                OrderItem::create([
+                    'order_id' => $order->id,
+                    'product_id' => $item['id'],
+                    'product_name' => $item['name'],
+                    'quantity' => $item['quantity'],
+                    'price' => $item['price']
+                ]);
+                
+                // Update product stock
+                $product = Product::find($item['id']);
+                $product->stock -= $item['quantity'];
+                $product->save();
+            }
             
-            // Process the successful payment
-            // Create order in database, clear cart, etc.
+            DB::commit();
             
-            return redirect()->route('checkout.complete')->with('success', 'Payment successful!');
+            // Clear cart and pending order
+            session()->forget(['cart', 'pending_order']);
+
+            return redirect()->route('checkout.complete', $order)->with('success', 'Your order has been placed successfully!');
         } catch (\Exception $e) {
-            return redirect()->route('checkout.cancel')->with('error', $e->getMessage());
+            DB::rollBack();
+            return redirect()->route('checkout.index')->with('error', 'An error occurred while processing your order. Please try again.');
         }
     }
 }

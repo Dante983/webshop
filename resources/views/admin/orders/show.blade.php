@@ -73,9 +73,25 @@
                         <tr>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="flex items-center">
-                                    @if($item->product && $item->product->image)
-                                        <img src="{{ asset('storage/' . $item->product->image) }}" alt="{{ $item->product_name }}" class="h-10 w-10 object-cover rounded mr-3">
-                                    @endif
+                                    <div class="flex-shrink-0 w-16 h-16 border border-gray-200 rounded-md overflow-hidden">
+                                        @php
+                                            $product = App\Models\Product::find($item->product_id);
+                                            $primaryImage = $product && $product->images->count() > 0 ? 
+                                                $product->images->where('is_primary', true)->first() : null;
+                                            $displayImage = $primaryImage ? $primaryImage : 
+                                                ($product && $product->images->count() > 0 ? $product->images->first() : null);
+                                        @endphp
+                                        
+                                        @if($displayImage)
+                                            <img src="{{ asset('storage/' . $displayImage->image_path) }}" 
+                                                 alt="{{ $item->product_name }}" 
+                                                 class="w-full h-full object-cover">
+                                        @else
+                                            <img src="{{ asset('images/no-image.jpg') }}" 
+                                                 alt="No image available" 
+                                                 class="w-full h-full object-cover">
+                                        @endif
+                                    </div>
                                     <div>
                                         <div class="text-sm font-medium text-gray-900">{{ $item->product_name }}</div>
                                         @if($item->product)

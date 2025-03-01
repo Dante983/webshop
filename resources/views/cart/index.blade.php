@@ -33,11 +33,17 @@
                                     <tr>
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             <div class="flex items-center">
-                                                @if($item['image'])
-                                                    <div class="flex-shrink-0 h-10 w-10">
-                                                        <img class="h-10 w-10 object-cover rounded-md" src="{{ asset('storage/' . $item['image']) }}" alt="{{ $item['name'] }}">
-                                                    </div>
-                                                @endif
+                                                <div class="flex-shrink-0 w-24 h-24 border border-gray-200 rounded-md overflow-hidden">
+                                                    @if($item['image'])
+                                                        <img src="{{ asset('storage/' . $item['image']) }}" 
+                                                             alt="{{ $item['name'] }}" 
+                                                             class="w-full h-full object-cover">
+                                                    @else
+                                                        <img src="{{ asset('images/no-image.jpg') }}" 
+                                                             alt="No image available" 
+                                                             class="w-full h-full object-cover">
+                                                    @endif
+                                                </div>
                                                 <div class="ml-4">
                                                     <div class="text-sm font-medium text-gray-900">{{ $item['name'] }}</div>
                                                 </div>
