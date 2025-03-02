@@ -6,6 +6,7 @@ use App\Models\Product;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Illuminate\Http\JsonResponse;
 
 class CartController extends Controller
 {
@@ -21,7 +22,7 @@ class CartController extends Controller
         return view('cart.index', compact('cartItems', 'totalAmount'));
     }
 
-    public function add(Product $product, Request $request): RedirectResponse
+    public function add(Product $product, Request $request): RedirectResponse|JsonResponse
     {
         $request->validate([
             'quantity' => 'required|integer|min:1'
@@ -35,6 +36,7 @@ class CartController extends Controller
 
         if (isset($cart[$product->id])) {
             $cart[$product->id]['quantity'] += $request->quantity;
+            $message = $product->name . ' quantity updated in cart!';
         } else {
             $cart[$product->id] = [
                 'id' => $product->id,
@@ -43,14 +45,23 @@ class CartController extends Controller
                 'quantity' => $request->quantity,
                 'image' => $imagePath
             ];
+            $message = $product->name . ' added to cart!';
         }
 
         session()->put('cart', $cart);
+        
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'cart_count' => count($cart)
+            ]);
+        }
 
-        return redirect()->back()->with('success', 'Product added to cart!');
+        return redirect()->back()->with('success', $message);
     }
 
-    public function update(Request $request): RedirectResponse
+    public function update(Request $request): RedirectResponse|JsonResponse
     {
         $request->validate([
             'product_id' => 'required',
@@ -58,10 +69,36 @@ class CartController extends Controller
         ]);
 
         $cart = session()->get('cart', []);
+        $productId = $request->product_id;
 
-        if (isset($cart[$request->product_id])) {
-            $cart[$request->product_id]['quantity'] = $request->quantity;
+        if (isset($cart[$productId])) {
+            $cart[$productId]['quantity'] = $request->quantity;
             session()->put('cart', $cart);
+            
+            // Calculate new totals
+            $itemTotal = $cart[$productId]['price'] * $cart[$productId]['quantity'];
+            $cartTotal = 0;
+            
+            foreach ($cart as $item) {
+                $cartTotal += $item['price'] * $item['quantity'];
+            }
+            
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Cart updated!',
+                    'item_total' => number_format($itemTotal, 2),
+                    'cart_total' => number_format($cartTotal, 2),
+                    'cart_count' => count($cart)
+                ]);
+            }
+        }
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Product not found in cart!'
+            ]);
         }
 
         return redirect()->back()->with('success', 'Cart updated!');
@@ -70,13 +107,17 @@ class CartController extends Controller
     public function remove(Request $request): RedirectResponse
     {
         $cart = session()->get('cart', []);
-
-        if (isset($cart[$request->product_id])) {
-            unset($cart[$request->product_id]);
+        $productId = $request->route('product');
+        
+        if (isset($cart[$productId])) {
+            $productName = $cart[$productId]['name'];
+            unset($cart[$productId]);
             session()->put('cart', $cart);
+            
+            return redirect()->back()->with('success', $productName . ' removed from cart!');
         }
 
-        return redirect()->back()->with('success', 'Product removed from cart!');
+        return redirect()->back()->with('error', 'Product not found in cart!');
     }
 
     public function clear(): RedirectResponse

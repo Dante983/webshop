@@ -179,6 +179,49 @@
                 this.classList.add('border-blue-500');
             });
         });
+        
+        // Add to cart form submission
+        const addToCartForm = document.querySelector('form[action*="cart/add"]');
+        if (addToCartForm) {
+            addToCartForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const formData = new FormData(this);
+                const productName = "{{ $product->name }}";
+                const quantity = formData.get('quantity');
+                
+                fetch(this.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Show notification
+                    showNotification(`${productName} added to cart!`);
+                    
+                    // Update cart count without page reload
+                    const cartCountElement = document.querySelector('.cart-count');
+                    if (cartCountElement) {
+                        cartCountElement.textContent = data.cart_count;
+                        cartCountElement.classList.remove('hidden');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    // Fallback to traditional form submission
+                    this.submit();
+                });
+            });
+        }
     });
 </script>
 @endpush

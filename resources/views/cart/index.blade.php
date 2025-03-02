@@ -53,14 +53,18 @@
                                             <div class="text-sm text-gray-900">${{ number_format($item['price'], 2) }}</div>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
-                                            <form action="{{ route('cart.update', ['product' => $id]) }}" method="POST" class="flex items-center">
-                                                @csrf
-                                                <input type="number" name="quantity" value="{{ $item['quantity'] }}" min="1" class="w-16 rounded-md border-gray-300">
-                                                <button type="submit" class="ml-2 text-indigo-600 hover:text-indigo-900">Update</button>
-                                            </form>
+                                            <div class="flex items-center">
+                                                <input type="number" 
+                                                       name="quantity" 
+                                                       value="{{ $item['quantity'] }}" 
+                                                       min="1" 
+                                                       class="quantity-input w-16 rounded-md border-gray-300"
+                                                       data-product-id="{{ $id }}">
+                                                <button type="button" class="update-btn ml-2 text-indigo-600 hover:text-indigo-900 hidden">Update</button>
+                                            </div>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm text-gray-900">${{ number_format($item['price'] * $item['quantity'], 2) }}</div>
+                                            <div class="text-sm text-gray-900 item-total">${{ number_format($item['price'] * $item['quantity'], 2) }}</div>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                             <form action="{{ route('cart.remove', ['product' => $id]) }}" method="POST" class="inline">
@@ -84,7 +88,7 @@
                             </form>
                         </div>
                         <div class="text-right">
-                            <div class="text-lg font-bold mb-2">Total: ${{ number_format($totalAmount, 2) }}</div>
+                            <div class="text-lg font-bold mb-2 cart-total">Total: ${{ number_format($totalAmount, 2) }}</div>
                             <a href="{{ route('checkout.index') }}" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
                                 Proceed to Checkout
                             </a>
@@ -95,4 +99,93 @@
         </div>
     </div>
 </div>
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const quantityInputs = document.querySelectorAll('.quantity-input');
+        
+        quantityInputs.forEach(input => {
+            input.addEventListener('change', function() {
+                const productId = this.dataset.productId;
+                const quantity = this.value;
+                
+                if (quantity < 1) {
+                    this.value = 1;
+                    return;
+                }
+                
+                updateCartItem(productId, quantity, this);
+            });
+        });
+        
+        function updateCartItem(productId, quantity, inputElement) {
+            // Show loading state
+            const row = inputElement.closest('tr');
+            row.classList.add('opacity-50');
+            
+            fetch('{{ route('cart.update-item') }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    product_id: productId,
+                    quantity: quantity
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Update UI
+                row.classList.remove('opacity-50');
+                
+                if (data.success) {
+                    // Update item total
+                    const itemTotal = row.querySelector('.item-total');
+                    itemTotal.textContent = '$' + data.item_total;
+                    
+                    // Update cart total
+                    const cartTotal = document.querySelector('.cart-total');
+                    cartTotal.textContent = 'Total: $' + data.cart_total;
+                    
+                    // Update cart count in navigation
+                    const cartCountElement = document.querySelector('.cart-count');
+                    if (cartCountElement) {
+                        cartCountElement.textContent = data.cart_count;
+                        cartCountElement.classList.remove('hidden');
+                    }
+                    
+                    // Show success message
+                    showNotification(data.message);
+                } else {
+                    // Show error message
+                    showNotification(data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                row.classList.remove('opacity-50');
+                showNotification('An error occurred. Please try again.', 'error');
+            });
+        }
+        
+        function showNotification(message, type = 'success') {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 p-4 rounded-md ${type === 'success' ? 'bg-green-500' : 'bg-red-500'} text-white max-w-md z-50`;
+            notification.textContent = message;
+            
+            // Add to DOM
+            document.body.appendChild(notification);
+            
+            // Remove after 3 seconds
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+    });
+</script>
+@endpush
 @endsection 

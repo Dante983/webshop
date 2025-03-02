@@ -15,6 +15,14 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="font-sans antialiased">
+        <div id="notification" class="fixed top-4 right-4 z-50 transform transition-transform duration-300 translate-x-full opacity-0">
+            <div class="bg-green-500 text-white px-4 py-3 rounded shadow-lg flex items-center">
+                <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                <span id="notification-message"></span>
+            </div>
+        </div>
         <div class="min-h-screen bg-gray-100">
             @include('layouts.navigation')
 
@@ -34,5 +42,43 @@
         </div>
 
         @stack('scripts')
+        <script>
+            function showNotification(message, isError = false) {
+                const notification = document.getElementById('notification');
+                const notificationMessage = document.getElementById('notification-message');
+                const notificationBg = notification.firstElementChild;
+                
+                // Set the message
+                notificationMessage.textContent = message;
+                
+                // Set the color based on message type
+                if (isError) {
+                    notificationBg.classList.remove('bg-green-500');
+                    notificationBg.classList.add('bg-red-500');
+                } else {
+                    notificationBg.classList.remove('bg-red-500');
+                    notificationBg.classList.add('bg-green-500');
+                }
+                
+                // Show the notification
+                notification.classList.remove('translate-x-full', 'opacity-0');
+                
+                // Hide after 3 seconds
+                setTimeout(() => {
+                    notification.classList.add('translate-x-full', 'opacity-0');
+                }, 3000);
+            }
+            
+            // Check for flash messages on page load
+            document.addEventListener('DOMContentLoaded', function() {
+                @if(session('success'))
+                    showNotification("{{ session('success') }}");
+                @endif
+                
+                @if(session('error'))
+                    showNotification("{{ session('error') }}", true);
+                @endif
+            });
+        </script>
     </body>
 </html>
