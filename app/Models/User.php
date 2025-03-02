@@ -49,4 +49,9 @@ class User extends Authenticatable
     {
         return $this->hasRole('admin');
     }
+
+    public function hasOrders()
+    {
+        return $this->orders()->exists();
+    }
 }
