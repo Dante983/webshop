@@ -55,10 +55,10 @@ class ProductController extends Controller
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $index => $image) {
                 $imagePath = $image->store('products', 'public');
-                
+
                 // Set the first image as primary
                 $isPrimary = ($index === 0);
-                
+
                 // Create the product image record
                 $product->images()->create([
                     'image_path' => $imagePath,
@@ -74,6 +74,9 @@ class ProductController extends Controller
 
     public function show(Product $product): View
     {
+        $product->load(['images' => function ($query) {
+            $query->orderBy('is_primary', 'desc');
+        }]);
         return view('admin.products.show', compact('product'));
     }
 
@@ -124,7 +127,7 @@ class ProductController extends Controller
         if ($request->has('primary_image')) {
             // Reset all images to non-primary
             $product->images()->update(['is_primary' => false]);
-            
+
             // Set the selected image as primary
             $primaryImage = ProductImage::find($request->primary_image);
             if ($primaryImage && $primaryImage->product_id == $product->id) {
@@ -135,13 +138,13 @@ class ProductController extends Controller
         // Handle new image uploads
         if ($request->hasFile('images')) {
             $hasPrimary = $product->images()->where('is_primary', true)->exists();
-            
+
             foreach ($request->file('images') as $index => $image) {
                 $imagePath = $image->store('products', 'public');
-                
+
                 // If no primary image exists, set the first new image as primary
                 $isPrimary = (!$hasPrimary && $index === 0);
-                
+
                 $product->images()->create([
                     'image_path' => $imagePath,
                     'is_primary' => $isPrimary

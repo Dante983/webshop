@@ -27,8 +27,12 @@
         <div class="p-6">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
-                    @if($product->image)
-                        <img src="{{ asset($product->image) }}" alt="{{ $product->name }}" class="w-full h-auto rounded-lg">
+                    @if($product->images)
+                        @foreach($product->images as $image)
+                            @if($image->is_primary)
+                                <img src="{{ asset('storage/' . $image->image_path) }}" alt="{{ $product->name }}" class="h-full w-full object-cover rounded">
+                            @endif
+                        @endforeach
                     @else
                         <div class="w-full h-64 bg-gray-200 flex items-center justify-center rounded-lg">
                             <span class="text-gray-500">No image</span>
@@ -112,9 +116,9 @@
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                     @forelse($product->images as $image)
                         <div class="relative border rounded p-2">
-                            <img src="{{ asset('storage/' . $image->image_path) }}" 
-                                 alt="{{ $product->name }}" 
-                                 class="h-32 w-full object-cover rounded">
+                            <img src="{{ asset('storage/' . $image->image_path) }}" alt="{{ $product->name }}" class="h-32 w-full object-cover rounded">
+                            <div class="mt-2 flex items-center justify-between">
+                            </div>
                             @if($image->is_primary)
                                 <div class="absolute top-0 right-0 bg-green-500 text-white text-xs px-2 py-1 rounded-bl">Primary</div>
                             @endif
@@ -127,4 +131,4 @@
         </div>
     </div>
 </div>
-@endsection 
+@endsection
